@@ -149,9 +149,12 @@ class GeofencingManager {
   }
 
   /// get all geofence identifiers
-  static Future<List<String>> getRegisteredGeofenceIds() async =>
-      List<String>.from(await (_channel
-          .invokeMethod('GeofencingPlugin.getRegisteredGeofenceIds') as FutureOr<Iterable<dynamic>>));
+  static Future<List<String>> getRegisteredGeofenceIds() async {
+    var result = await _channel.invokeMethod<Iterable<dynamic>>(
+      'GeofencingPlugin.getRegisteredGeofenceIds',
+    );
+    return List<String>.from(result!);
+  }
 
   /// Stop receiving geofence events for a given [GeofenceRegion].
   static Future<bool?> removeGeofence(GeofenceRegion region) async =>
