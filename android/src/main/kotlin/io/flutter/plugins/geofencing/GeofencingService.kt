@@ -63,6 +63,11 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
         synchronized(sServiceStarted) {
             mContext = context
             if (sBackgroundFlutterEngine == null) {
+                //If callback lookup was attempted before Flutter was initialized, the
+                //callback cache would not yet be populated resulting in a failed callback
+                //lookup.
+                //see: https://github.com/flutter/plugins/commit/de56da50ca78ef275a95b4e59ce8d5e119eadd7a
+                sBackgroundFlutterEngine = FlutterEngine(context)
                 val callbackHandle = context.getSharedPreferences(
                         GeofencingPlugin.SHARED_PREFERENCES_KEY,
                         Context.MODE_PRIVATE)
@@ -78,7 +83,6 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
                     return
                 }
                 Log.i(TAG, "Starting GeofencingService...")
-                sBackgroundFlutterEngine = FlutterEngine(context)
 
                 val args = DartCallback(
                     context.getAssets(),
