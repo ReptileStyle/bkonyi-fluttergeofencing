@@ -1,6 +1,8 @@
 ## Why this fork
 
-This repository is a curated fork of [bkonyi's FlutterGeofencing](https://github.com/bkonyi/FlutterGeofencing/) repository. Changes will be cherry-picked in from other community members' forks (when the licensing allows), as well as from the upstream repository should they happen. This is because the development speed in upstream is slow and other member may have significant bugfixes that would benefit.
+This repository is a curated fork of [bkonyi's FlutterGeofencing](https://github.com/bkonyi/FlutterGeofencing/) repository. Unfortunately, the upstream project is not officially on Pub, causing different members to do bug fixes in their forks. For example, null safety is migrated by 3 different people ([1](https://github.com/timeuser/FlutterGeofencing/commit/986f7011500511b0a143ecf5970bfc46da729e82), [2](https://github.com/vovaklh/FlutterGeofencing/commit/1e88902c8001bdc9c4766ee80d356bed63e2759d), [3](https://github.com/tashiwangdi/FlutterGeofencing/commit/e5d57b8788a23a20c928bbf5475e371c5937a92a)). This causes a lot of fixes to be lost.
+
+This fork hopes to cherry-picked the best contributions (when the licensing allows) and package them in a usable manner. 
 
 ## Branching
 
@@ -12,7 +14,7 @@ Significant changes will be tagged in this repository, and the tagging conventio
 
 ## Usage
 
-To use this repo, simply add the following to the project's `pubspec.yaml`:
+To use this repo, simply add the following to the project's `pubspec.yaml`, and substitute the desired version:
 
 ```yaml
 dependencies:
@@ -26,6 +28,7 @@ dependencies:
 
 * [JFreakDK](https://github.com/JFreakDK/FlutterGeofencing)
 * [mister-rao](https://github.com/mister-rao/FlutterGeofencing)
+* [timeuser](https://github.com/timeuser/FlutterGeofencing)
 * [umbrew](https://github.com/umbrew/FlutterGeofencing)
 * [vovaklh](https://github.com/vovaklh/FlutterGeofencing)
 
