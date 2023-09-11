@@ -106,12 +106,10 @@ class GeofencingManager {
 
   /// Initialize the plugin and request relevant permissions from the user.
   static Future<void> initialize() async {
-    final CallbackHandle? callback =
-        PluginUtilities.getCallbackHandle(callbackDispatcher);
-    if (callback != null) {
-      await _channel.invokeMethod('GeofencingPlugin.initializeService',
-          <dynamic>[callback.toRawHandle()]);
-    }
+    final CallbackHandle callback =
+        PluginUtilities.getCallbackHandle(callbackDispatcher)!;
+    await _channel.invokeMethod('GeofencingPlugin.initializeService',
+        <dynamic>[callback.toRawHandle()]);
   }
 
   /// Promote the geofencing service to a foreground service.
@@ -148,17 +146,20 @@ class GeofencingManager {
       throw UnsupportedError("iOS does not support 'GeofenceEvent.dwell'");
     }
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
-    if (callbackHandle != null) {
-      final List<dynamic> args = <dynamic>[callbackHandle.toRawHandle()];
-      args.addAll(region._toArgs());
-      await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
-    }
+    // If callbackHandle is null, the registration fails
+    assert (callbackHandle != null);
+    final List<dynamic> args = <dynamic>[callbackHandle!.toRawHandle()];
+    args.addAll(region._toArgs());
+    await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
   }
 
   /// get all geofence identifiers
-  static Future<List<String>> getRegisteredGeofenceIds() async =>
-      List<String>.from(await _channel
-          .invokeMethod('GeofencingPlugin.getRegisteredGeofenceIds'));
+  static Future<List<String>> getRegisteredGeofenceIds() async {
+    var result = await _channel.invokeMethod<Iterable<dynamic>>(
+      'GeofencingPlugin.getRegisteredGeofenceIds',
+    );
+    return List<String>.from(result!);
+  }
 
   /// Stop receiving geofence events for a given [GeofenceRegion].
   static Future<bool> removeGeofence(GeofenceRegion region) async =>
