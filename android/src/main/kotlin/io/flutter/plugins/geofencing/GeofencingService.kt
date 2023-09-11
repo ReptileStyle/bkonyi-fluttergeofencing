@@ -32,8 +32,8 @@ import com.google.android.gms.location.GeofencingEvent
 
 class GeofencingService : MethodCallHandler, JobIntentService() {
     private val queue = ArrayDeque<List<Any>>()
-    private var mBackgroundChannel: MethodChannel? = null
-    private var mContext: Context? = null
+    private lateinit var mBackgroundChannel: MethodChannel
+    private lateinit var mContext: Context
 
     companion object {
         @JvmStatic
@@ -63,8 +63,11 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
         synchronized(sServiceStarted) {
             mContext = context
             if (sBackgroundFlutterEngine == null) {
+                //If callback lookup was attempted before Flutter was initialized, the
+                //callback cache would not yet be populated resulting in a failed callback
+                //lookup.
+                //see: https://github.com/flutter/plugins/commit/de56da50ca78ef275a95b4e59ce8d5e119eadd7a
                 sBackgroundFlutterEngine = FlutterEngine(context)
-
                 val callbackHandle = context.getSharedPreferences(
                         GeofencingPlugin.SHARED_PREFERENCES_KEY,
                         Context.MODE_PRIVATE)
@@ -92,7 +95,7 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
         }
         mBackgroundChannel = MethodChannel(sBackgroundFlutterEngine!!.getDartExecutor().getBinaryMessenger(),
                 "plugins.flutter.io/geofencing_plugin_background")
-        mBackgroundChannel?.setMethodCallHandler(this)
+        mBackgroundChannel.setMethodCallHandler(this)
     }
 
    override fun onMethodCall(call: MethodCall, result: Result) {
@@ -100,18 +103,18 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
             "GeofencingService.initialized" -> {
                 synchronized(sServiceStarted) {
                     while (!queue.isEmpty()) {
-                        mBackgroundChannel?.invokeMethod("", queue.remove())
+                        mBackgroundChannel.invokeMethod("", queue.remove())
                     }
                     sServiceStarted.set(true)
                 }
             }
             "GeofencingService.promoteToForeground" -> {
-                mContext?.startForegroundService(Intent(mContext, IsolateHolderService::class.java))
+                mContext.startForegroundService(Intent(mContext, IsolateHolderService::class.java))
             }
             "GeofencingService.demoteToBackground" -> {
                 val intent = Intent(mContext, IsolateHolderService::class.java)
                 intent.setAction(IsolateHolderService.ACTION_SHUTDOWN)
-                mContext?.startForegroundService(intent)
+                mContext.startForegroundService(intent)
             }
             else -> result.notImplemented()
         }
@@ -125,8 +128,8 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
 
     override fun onHandleWork(intent: Intent) {
         val callbackHandle = intent.getLongExtra(GeofencingPlugin.CALLBACK_HANDLE_KEY, 0)
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
-        if (geofencingEvent!!.hasError()) {
+        val geofencingEvent = GeofencingEvent.fromIntent(intent)!!
+        if (geofencingEvent.hasError()) {
             Log.e(TAG, "Geofencing error: ${geofencingEvent.errorCode}")
             return
         }
@@ -140,9 +143,9 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
             it.requestId
         }
 
-        val location = geofencingEvent.triggeringLocation
-        val locationList = listOf(location!!.latitude,
-                location!!.longitude)
+        val location = geofencingEvent.triggeringLocation!!
+        val locationList = listOf(location.latitude,
+                location.longitude)
         val geofenceUpdateList = listOf(callbackHandle,
                 triggeringGeofences,
                 locationList,
@@ -154,7 +157,7 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
                 queue.add(geofenceUpdateList)
             } else {
                 // Callback method name is intentionally left blank.
-                Handler(mContext!!.mainLooper).post { mBackgroundChannel!!.invokeMethod("", geofenceUpdateList) }
+                Handler(mContext.mainLooper).post { mBackgroundChannel.invokeMethod("", geofenceUpdateList) }
             }
         }
     }

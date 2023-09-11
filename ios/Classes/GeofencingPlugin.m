@@ -28,6 +28,10 @@ static BOOL initialized = NO;
 static BOOL backgroundIsolateRun = NO;
 #pragma mark FlutterPlugin Methods
 
++ (void)deregister {
+  instance = nil;
+}
+
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   @synchronized(self) {
     if (instance == nil) {
@@ -143,8 +147,8 @@ static BOOL backgroundIsolateRun = NO;
   _eventQueue = [[NSMutableArray alloc] init];
   _locationManager = [[CLLocationManager alloc] init];
   [_locationManager setDelegate:self];
-  // [_locationManager requestAlwaysAuthorization];
-  // _locationManager.allowsBackgroundLocationUpdates = YES;
+  [_locationManager requestWhenInUseAuthorization];
+  _locationManager.allowsBackgroundLocationUpdates = YES;
 
   _headlessRunner = [[FlutterEngine alloc] initWithName:@"GeofencingIsolate" project:nil allowHeadlessExecution:YES];
   _registrar = registrar;

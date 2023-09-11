@@ -7,7 +7,6 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
 import 'package:geofencing/geofencing.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -19,23 +18,24 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String geofenceState = 'N/A';
+  String? geofenceState = 'N/A';
   List<String> registeredGeofences = [];
-  double latitude = 50.00187;
-  double longitude = 36.23866;
-  double radius = 200.0;
+  double latitude = 37.419851;
+  double longitude = -122.078818;
+  double radius = 150.0;
   ReceivePort port = ReceivePort();
   final List<GeofenceEvent> triggers = <GeofenceEvent>[
     GeofenceEvent.enter,
+    GeofenceEvent.dwell,
     GeofenceEvent.exit
   ];
   final AndroidGeofencingSettings androidSettings = AndroidGeofencingSettings(
     initialTrigger: <GeofenceEvent>[
       GeofenceEvent.enter,
-      GeofenceEvent.exit,
+      GeofenceEvent.dwell,
+      GeofenceEvent.exit
     ],
-    loiteringDelay: 0,
-    notificationResponsiveness: 0,
+    loiteringDelay: 1000 * 60,
   );
 
   @override
@@ -54,55 +54,26 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  void registerGeofence() async {
-    final firstPermission = await Permission.locationWhenInUse.request();
-    final secondPermission = await Permission.locationAlways.request();
-    if (firstPermission.isGranted && secondPermission.isGranted) {
-      await GeofencingManager.registerGeofence(
-        GeofenceRegion(
-          'mtv',
-          latitude,
-          longitude,
-          radius,
-          triggers,
-          androidSettings,
-        ),
-        callback,
-      );
-      final registeredIds = await GeofencingManager.getRegisteredGeofenceIds();
-      setState(() {
-        registeredGeofences = registeredIds;
-      });
-    }
-  }
-
-  void unregisteGeofence() async {
-    await GeofencingManager.removeGeofenceById('mtv');
-    final registeredIds = await GeofencingManager.getRegisteredGeofenceIds();
-    setState(() {
-      registeredGeofences = registeredIds;
-    });
-  }
-
   @pragma('vm:entry-point')
   static void callback(List<String> ids, Location l, GeofenceEvent e) async {
     print('Fences: $ids Location $l Event: $e');
-    final SendPort send =
+    final SendPort? send =
         IsolateNameServer.lookupPortByName('geofencing_send_port');
     send?.send(e.toString());
   }
 
+  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     print('Initializing...');
     await GeofencingManager.initialize();
     print('Initialization done');
   }
 
-  String numberValidator(String value) {
+  String? numberValidator(String value) {
     if (value == null) {
       return null;
     }
-    final num a = num.tryParse(value);
+    final num? a = num.tryParse(value);
     if (a == null) {
       return '"$value" is not a valid number';
     }
@@ -123,16 +94,42 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     Text('Current state: $geofenceState'),
                     Center(
-                      child: TextButton(
+                      child: ElevatedButton(
                         child: const Text('Register'),
-                        onPressed: registerGeofence,
+                        onPressed: () async {
+                          final firstPermission = await Permission.locationWhenInUse.request();
+                          final secondPermission = await Permission.locationAlways.request();
+                          if (firstPermission.isGranted && secondPermission.isGranted) {
+                            await GeofencingManager.registerGeofence(
+                              GeofenceRegion(
+                                'mtv',
+                                latitude,
+                                longitude,
+                                radius,
+                                triggers,
+                                androidSettings: androidSettings,
+                              ),
+                              callback,
+                            );
+                            final registeredIds = await GeofencingManager.getRegisteredGeofenceIds();
+                            setState(() {
+                              registeredGeofences = registeredIds;
+                            });
+                          }
+                        },
                       ),
                     ),
                     Text('Registered Geofences: $registeredGeofences'),
                     Center(
-                      child: TextButton(
+                      child: ElevatedButton(
                         child: const Text('Unregister'),
-                        onPressed: unregisteGeofence,
+                        onPressed: () async {
+                          await GeofencingManager.removeGeofenceById('mtv');
+                          final registeredIds = await GeofencingManager.getRegisteredGeofenceIds();
+                          setState(() {
+                            registeredGeofences = registeredIds;
+                          });
+                        },
                       ),
                     ),
                     TextField(
@@ -143,7 +140,7 @@ class _MyAppState extends State<MyApp> {
                       controller:
                           TextEditingController(text: latitude.toString()),
                       onChanged: (String s) {
-                        latitude = double.tryParse(s);
+                        latitude = double.tryParse(s) ?? latitude;
                       },
                     ),
                     TextField(
@@ -153,7 +150,7 @@ class _MyAppState extends State<MyApp> {
                         controller:
                             TextEditingController(text: longitude.toString()),
                         onChanged: (String s) {
-                          longitude = double.tryParse(s);
+                          longitude = double.tryParse(s) ?? longitude;
                         }),
                     TextField(
                         decoration: const InputDecoration(hintText: 'Radius'),
@@ -161,7 +158,7 @@ class _MyAppState extends State<MyApp> {
                         controller:
                             TextEditingController(text: radius.toString()),
                         onChanged: (String s) {
-                          radius = double.tryParse(s);
+                          radius = double.tryParse(s) ?? radius;
                         }),
                   ]))),
     );

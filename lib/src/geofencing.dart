@@ -76,9 +76,10 @@ class GeofenceRegion {
     double latitude,
     double longitude,
     this.radius,
-    this.triggers,
-    this.androidSettings,
-  ) : location = Location(latitude, longitude);
+    this.triggers, {
+    AndroidGeofencingSettings? androidSettings,
+  })  : location = Location(latitude, longitude),
+        androidSettings = (androidSettings ?? AndroidGeofencingSettings());
 
   List<dynamic> _toArgs() {
     final int triggerMask = triggers.fold(
@@ -146,11 +147,12 @@ class GeofencingManager {
         (region.triggers.length == 1)) {
       throw UnsupportedError("iOS does not support 'GeofenceEvent.dwell'");
     }
-    final List<dynamic> args = <dynamic>[
-      PluginUtilities.getCallbackHandle(callback)!.toRawHandle()
-    ];
-    args.addAll(region._toArgs());
-    await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
+    final callbackHandle = PluginUtilities.getCallbackHandle(callback);
+    if (callbackHandle != null) {
+      final List<dynamic> args = <dynamic>[callbackHandle.toRawHandle()];
+      args.addAll(region._toArgs());
+      await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
+    }
   }
 
   /// get all geofence identifiers
