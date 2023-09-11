@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+
 import 'package:geofencing/geofencing.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -32,8 +33,8 @@ class _MyAppState extends State<MyApp> {
   final AndroidGeofencingSettings androidSettings = AndroidGeofencingSettings(
     initialTrigger: <GeofenceEvent>[
       GeofenceEvent.enter,
+      GeofenceEvent.exit,
       GeofenceEvent.dwell,
-      GeofenceEvent.exit
     ],
     loiteringDelay: 1000 * 60,
   );

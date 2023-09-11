@@ -147,7 +147,7 @@ class GeofencingManager {
     }
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     // If callbackHandle is null, the registration fails
-    assert (callbackHandle != null);
+    assert(callbackHandle != null);
     final List<dynamic> args = <dynamic>[callbackHandle!.toRawHandle()];
     args.addAll(region._toArgs());
     await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
