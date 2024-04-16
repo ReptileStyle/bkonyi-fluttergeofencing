@@ -1,6 +1,6 @@
 name: geofencing
 description: A geofencing plugin for Flutter applications.
-version: 0.2.0-pre2
+version: 0.2.0-pre2+1
 homepage: https://github.com/flutter/plugins
 
 environment:

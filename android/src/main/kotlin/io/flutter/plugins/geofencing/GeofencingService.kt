@@ -128,6 +128,7 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
 
     override fun onHandleWork(intent: Intent) {
         val callbackHandle = intent.getLongExtra(GeofencingPlugin.CALLBACK_HANDLE_KEY, 0)
+        val callbackPayload = intent.getStringExtra(GeofencingPlugin.CALLBACK_PAYLOAD_KEY) ?: ""
         val geofencingEvent = GeofencingEvent.fromIntent(intent)!!
         if (geofencingEvent.hasError()) {
             Log.e(TAG, "Geofencing error: ${geofencingEvent.errorCode}")
@@ -149,7 +150,9 @@ class GeofencingService : MethodCallHandler, JobIntentService() {
         val geofenceUpdateList = listOf(callbackHandle,
                 triggeringGeofences,
                 locationList,
-                geofenceTransition)
+                geofenceTransition,
+                callbackPayload
+        )
 
         synchronized(sServiceStarted) {
             if (!sServiceStarted.get()) {

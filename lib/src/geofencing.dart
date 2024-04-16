@@ -138,8 +138,9 @@ class GeofencingManager {
   /// `GeofenceEvent.dwell` trigger on iOS, `UnsupportedError` is thrown.
   static Future<void> registerGeofence(
       GeofenceRegion region,
-      void Function(List<String> id, Location location, GeofenceEvent event)
-          callback) async {
+      void Function(List<String> id, Location location, GeofenceEvent event, String payload) callback,
+      String? payload
+      ) async {
     if (Platform.isIOS &&
         region.triggers.contains(GeofenceEvent.dwell) &&
         (region.triggers.length == 1)) {
@@ -148,7 +149,7 @@ class GeofencingManager {
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     // If callbackHandle is null, the registration fails
     assert(callbackHandle != null);
-    final List<dynamic> args = <dynamic>[callbackHandle!.toRawHandle()];
+    final List<dynamic> args = <dynamic>[callbackHandle!.toRawHandle(), payload];
     args.addAll(region._toArgs());
     await _channel.invokeMethod('GeofencingPlugin.registerGeofence', args);
   }
