@@ -39,8 +39,6 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
     @JvmStatic
     val CALLBACK_HANDLE_KEY = "callback_handle"
     @JvmStatic
-    val CALLBACK_PAYLOAD_KEY = "callback_payload"
-    @JvmStatic
     val CALLBACK_DISPATCHER_HANDLE_KEY = "callback_dispatch_handler"
     @JvmStatic
     val PERSISTENT_GEOFENCES_KEY = "persistent_geofences"
@@ -80,16 +78,15 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
                                  result: Result?,
                                  cache: Boolean) {
       val callbackHandle = args!![0] as Long
-      val payload = (args[1] as String?) ?: ""
-      val id = args[2] as String
-      val lat = args[3] as Double
-      val long = args[4] as Double
-      val radius = (args[5] as Number).toFloat()
-      val fenceTriggers = args[6] as Int
-      val initialTriggers = args[7] as Int
-      val expirationDuration = (args[8] as Int).toLong()
-      val loiteringDelay = args[9] as Int
-      val notificationResponsiveness = args[10] as Int
+      val id = args[1] as String
+      val lat = args[2] as Double
+      val long = args[3] as Double
+      val radius = (args[4] as Number).toFloat()
+      val fenceTriggers = args[5] as Int
+      val initialTriggers = args[6] as Int
+      val expirationDuration = (args[7] as Int).toLong()
+      val loiteringDelay = args[8] as Int
+      val notificationResponsiveness = args[9] as Int
       val geofence = Geofence.Builder()
               .setRequestId(id)
               .setCircularRegion(lat, long, radius)
@@ -106,7 +103,7 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
         result?.error(msg, null, null)
       }
       geofencingClient.addGeofences(getGeofencingRequest(geofence, initialTriggers),
-              getGeofencePendingIndent(context, callbackHandle, payload))?.run {
+              getGeofencePendingIndent(context, callbackHandle))?.run {
         addOnSuccessListener {
           Log.i(TAG, "Successfully added geofence")
           if (cache) {
@@ -161,10 +158,9 @@ class GeofencingPlugin : ActivityAware, FlutterPlugin, MethodCallHandler {
     }
 
     @JvmStatic
-    private fun getGeofencePendingIndent(context: Context, callbackHandle: Long, payload: String): PendingIntent {
+    private fun getGeofencePendingIndent(context: Context, callbackHandle: Long): PendingIntent {
       val intent = Intent(context, GeofencingBroadcastReceiver::class.java)
               .putExtra(CALLBACK_HANDLE_KEY, callbackHandle)
-              .putExtra(CALLBACK_PAYLOAD_KEY, payload)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
       } else {
