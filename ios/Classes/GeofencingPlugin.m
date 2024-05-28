@@ -131,13 +131,11 @@ static BOOL backgroundIsolateRun = NO;
   NSAssert([region isKindOfClass:[CLCircularRegion class]], @"region must be CLCircularRegion");
   CLLocationCoordinate2D center = region.center;
   int64_t handle = [self getCallbackHandleForRegionId:region.identifier];
-  NSString *payload = [self getPayloadForRegionId:region.identifier];
-
   if (handle != 0 && _callbackChannel != nil) {
       [_callbackChannel
        invokeMethod:@""
         arguments:@[
-            @(handle), @[ region.identifier ], @[ @(center.latitude), @(center.longitude) ], @(event), payload
+            @(handle), @[ region.identifier ], @[ @(center.latitude), @(center.longitude) ], @(event)
         ]];
   }
 }
@@ -186,12 +184,11 @@ static BOOL backgroundIsolateRun = NO;
 
 - (void)registerGeofence:(NSArray *)arguments {
   int64_t callbackHandle = [arguments[0] longLongValue];
-  NSString *payload = arguments[1];
-  NSString *identifier = arguments[2];
-  double latitude = [arguments[3] doubleValue];
-  double longitude = [arguments[4] doubleValue];
-  double radius = [arguments[5] doubleValue];
-  int64_t triggerMask = [arguments[6] longLongValue];
+  NSString *identifier = arguments[1];
+  double latitude = [arguments[2] doubleValue];
+  double longitude = [arguments[3] doubleValue];
+  double radius = [arguments[4] doubleValue];
+  int64_t triggerMask = [arguments[5] longLongValue];
 
   CLCircularRegion *region =
       [[CLCircularRegion alloc] initWithCenter:CLLocationCoordinate2DMake(latitude, longitude)
@@ -200,7 +197,7 @@ static BOOL backgroundIsolateRun = NO;
   region.notifyOnEntry = ((triggerMask & 0x1) != 0);
   region.notifyOnExit = ((triggerMask & 0x2) != 0);
   
-  [self setCallbackHandleForRegionId:callbackHandle regionId:identifier payload: payload];
+  [self setCallbackHandleForRegionId:callbackHandle regionId:identifier];
   [self->_locationManager startMonitoringForRegion:region];
 }
 
@@ -210,7 +207,6 @@ static BOOL backgroundIsolateRun = NO;
     if ([region.identifier isEqual:identifier]) {
       [self->_locationManager stopMonitoringForRegion:region];
       [self removeCallbackHandleForRegionId:identifier];
-      [self removePayloadForRegionId:identifier];
       return YES;
     }
   }
@@ -254,16 +250,6 @@ static BOOL backgroundIsolateRun = NO;
   [_persistentState setObject:mapping forKey:key];
 }
 
-- (NSString *)getPayloadForRegionId:(NSString *)identifier {
-  NSMutableDictionary *mapping = [self getRegionCallbackMapping];
-  NSString *payloadKey = [NSString stringWithFormat:@"payload_%@", identifier];
-  id payload = [mapping objectForKey:payloadKey];
-  if (payload == nil) {
-    return nil;
-  }
-  return (NSString *)payload;
-}
-
 - (int64_t)getCallbackHandleForRegionId:(NSString *)identifier {
   NSMutableDictionary *mapping = [self getRegionCallbackMapping];
   id handle = [mapping objectForKey:identifier];
@@ -273,24 +259,15 @@ static BOOL backgroundIsolateRun = NO;
   return [handle longLongValue];
 }
 
-- (void)setCallbackHandleForRegionId:(int64_t)handle regionId:(NSString *)identifier payload:(NSString *)payload {
+- (void)setCallbackHandleForRegionId:(int64_t)handle regionId:(NSString *)identifier {
   NSMutableDictionary *mapping = [self getRegionCallbackMapping];
   [mapping setObject:[NSNumber numberWithLongLong:handle] forKey:identifier];
-  NSString *payloadKey = [NSString stringWithFormat:@"payload_%@", identifier];
-  [mapping setObject:payload forKey:payloadKey];
   [self setRegionCallbackMapping:mapping];
 }
 
 - (void)removeCallbackHandleForRegionId:(NSString *)identifier {
   NSMutableDictionary *mapping = [self getRegionCallbackMapping];
   [mapping removeObjectForKey:identifier];
-  [self setRegionCallbackMapping:mapping];
-}
-
-- (void)removePayloadForRegionId:(NSString *)identifier {
-  NSMutableDictionary *mapping = [self getRegionCallbackMapping];
-  NSString *payloadKey = [NSString stringWithFormat:@"payload_%@", identifier];
-  [mapping removeObjectForKey:payloadKey];
   [self setRegionCallbackMapping:mapping];
 }
 
