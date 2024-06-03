@@ -175,9 +175,9 @@ static BOOL backgroundIsolateRun = NO;
   // with the runner in order for them to work on the background isolate. `registerPlugins` is
   // a callback set from AppDelegate.m in the main application. This callback should register
   // all relevant plugins (excluding those which require UI).
-  if (!backgroundIsolateRun) {
+//  if (!backgroundIsolateRun) {
     registerPlugins(_headlessRunner);
-  }
+//  }
   [_registrar addMethodCallDelegate:self channel:_callbackChannel];
   backgroundIsolateRun = YES;
 }
