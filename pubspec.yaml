@@ -21,5 +21,3 @@ flutter:
       android:
         package: io.flutter.plugins.geofencing
         pluginClass: GeofencingPlugin
-      ios:
-        pluginClass: GeofencingPlugin
