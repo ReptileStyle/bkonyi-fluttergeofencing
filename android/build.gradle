@@ -41,6 +41,23 @@ android {
     }
 
     namespace 'io.flutter.plugins.geofencing'
+
+    // Configure only for each module that uses Java 8
+    // language features (either in its source code or
+    // through dependencies).
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    kotlin {
+        // Adding this solved it
+        jvmToolchain(17)
+    }
 }
 
 dependencies {
