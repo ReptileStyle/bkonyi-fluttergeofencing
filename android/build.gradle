@@ -1,7 +1,4 @@
-
-group 'io.flutter.plugins.geofencing'
-version '1.0-SNAPSHOT'
-
+// NEW: This section replaces the old apply plugin statements
 buildscript {
     ext.kotlin_version = '1.9.20'
 
@@ -11,10 +8,18 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.0'
+        classpath 'com.android.tools.build:gradle:4.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+}
+
+group 'io.flutter.plugins.geofencing'
+version '1.0-SNAPSHOT'
 
 rootProject.allprojects {
     repositories {
@@ -23,12 +28,17 @@ rootProject.allprojects {
     }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-
 android {
-    compileSdkVersion 35
+    namespace 'io.flutter.plugins.geofencing'
+    compileSdkVersion 34
 
+    kotlinOptions {
+        jvmTarget = '1.8' // Set the JVM target to 1.8 to match the likely Java setting
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
@@ -39,28 +49,9 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
-
-    namespace 'io.flutter.plugins.geofencing'
-
-    // Configure only for each module that uses Java 8
-    // language features (either in its source code or
-    // through dependencies).
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    kotlin {
-        // Adding this solved it
-        jvmToolchain(17)
-    }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "com.google.android.gms:play-services-location:21.+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.google.android.gms:play-services-location:17.+"
 }
